@@ -1,0 +1,92 @@
+MAKEFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
+
+
+CXX_STANDARD_FLAGS = -std=c++2a
+CXX_WARNING_FLAGS = -Werror -Wextra -Wall -Wno-nonnull-compare -Wno-deprecated-copy -Wno-address-of-packed-member -Wundef -Wcast-qual -Wwrite-strings -Wimplicit-fallthrough -Wno-expansion-to-defined
+CXX_FLAVOR_FLAGS = -fexceptions -fno-rtti -fstack-protector
+#CXX_SUGGEST_FLAGS = -Wsuggest-final-types -Wsuggest-final-methods -Wsuggest-override #-Wsuggest-attribute=noreturn 
+
+C_STANDARD_FLAGS =
+C_WARNING_FLAGS = -Werror -Wextra -Wall -Wno-nonnull-compare -Wno-address-of-packed-member -Wundef -Wcast-qual -Wwrite-strings -Wimplicit-fallthrough -Wno-expansion-to-defined
+C_FLAVOR_FLAGS = -fstack-protector
+
+ARCH_FLAGS =
+OPTIMIZATION_FLAGS = -Os
+
+INCLUDE_FLAGS += \
+    -I . \
+	-I ../
+    
+
+VERBOSE = 0
+
+CXX = $(PRE_CXX) g++
+
+AS = as
+LINK = ld
+OBJ_SUFFIX ?= .host
+ARCH = $(shell arch -s)
+
+CXXFLAGS = -MMD -MP $(CXX_WARNING_FLAGS) $(OPTIMIZATION_FLAGS) $(CXX_FLAVOR_FLAGS) $(ARCH_FLAGS) $(CXX_STANDARD_FLAGS) $(CXX_SUGGEST_FLAGS) $(INCLUDE_FLAGS) $(DEFINES) $(SUBPROJECT_CXXFLAGS)
+CFLAGS = -MMD -MP $(C_FLAVOR_FLAGS) $(ARCH_FLAGS) $(C_STANDARD_FLAGS) $(C_SUGGEST_FLAGS) $(INCLUDE_FLAGS) $(DEFINES) $(SUBPROJECT_CXXFLAGS)
+
+ifeq ($(VERBOSE),1)
+    QUIET =
+else
+    QUIET = @
+endif
+
+
+
+.SUFFIXES:
+
+%.o: %.cpp $(EXTRA_SOURCES)
+	@echo "$(notdir $(CURDIR)): C++ $@"
+	$(QUIET) $(CXX) $(CXXFLAGS) -o $@ -c $<
+
+%.o: %.c
+	@echo "$(notdir $(CURDIR)): C $@"
+	$(QUIET) $(CC) $(CFLAGS) -o $@ -c $<
+
+%.ao: %.S
+	@echo "$(notdir $(CURDIR)): AS $@"
+	$(QUIET) $(AS) -o $@ $<
+
+$(PROGRAM): $(STATIC_LIB_DEPS) $(OBJS) $(EXTRA_OBJS)
+	@echo "$(notdir $(CURDIR)): LINK $(PROGRAM)"
+	$(QUIET) $(CXX) -o $(PROGRAM) $(EXTRA_OBJS) $(OBJS) $(LDFLAGS)
+
+$(LIBRARY): $(OBJS) $(EXTRA_OBJS)
+	@echo "$(notdir $(CURDIR)): LIB $@"
+	$(QUIET) $(AR) rcs $@ $(OBJS) $(EXTRA_OBJS) $(LIBS)
+	$(POST_LIBRARY_BUILD)
+
+#.PHONY: $(STATIC_LIB_DEPS)
+$(STATIC_LIB_DEPS):
+	@flock $(dir $(@)) $(MAKE) -C $(dir $(@))
+
+IPCCOMPILER = $(SERENITY_BASE_DIR)/DevTools/IPCCompiler/IPCCompiler
+IPCCOMPILER: $(IPCCOMPILER)
+$(IPCCOMPILER):
+	@flock $(dir $(@)) $(MAKE) -C $(dir $(@))
+
+FORMCOMPILER = $(SERENITY_BASE_DIR)/DevTools/FormCompiler/FormCompiler
+FORMCOMPILER: $(FORMCOMPILER)
+$(FORMCOMPILER):
+	@flock $(dir $(@)) $(MAKE) -C $(dir $(@))
+
+.DEFAULT_GOAL := all
+
+all: $(PROGRAM) $(LIBRARY)
+
+EXTRA_CLEAN ?=
+
+clean:
+	@echo "$(notdir $(CURDIR)): CLEAN"
+	$(QUIET) rm -f $(PROGRAM) $(LIBRARY) $(SUFFIXED_OBJS) $(EXTRA_OBJS) $(OBJS) $(EXTRA_CLEAN)
+
+install:
+
+.DELETE_ON_ERROR:
+
+.PHONY: all clean install
