@@ -6,11 +6,13 @@
 class VertexShader
 {
 public:
-    VertexShader(arma::mat44 & projection_matrix);
+    VertexShader(const arma::mat44 & projection_matrix, const arma::mat44 & transformation_matrix);
     void apply(const arma::vec4 & in);
+    void clean();
     const std::vector<arma::vec4> &projectedVertices() const;
 private:
-    arma::mat44 & m_projection_matrix;
+    const arma::mat44 & m_projection_matrix;
+    const arma::mat44 & m_transformation_matrix;
     std::vector<arma::vec4> m_projected_vertices;
 };
 

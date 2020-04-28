@@ -33,7 +33,7 @@ int main(int argc, char ** argv)
         }
 
         window.clear(sf::Color::Black);
-        
+        img.fill(0);
         render.render(img, scene);
         image.create(800, 600, img.mem);
         texture.loadFromImage(image);

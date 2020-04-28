@@ -1,4 +1,4 @@
-#include <Image.h>
+#include <Render/Image.h>
 
 Image::Image(uint h, uint w) :
     m_pixels(h*w) 

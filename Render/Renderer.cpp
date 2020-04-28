@@ -4,8 +4,6 @@
 #include <iostream>
 
 void line(int x0, int y0, int x1, int y1, arma::Cube<sf::Uint8> &img) {
-    std::cout << x0 << " " << y0 << std::endl;
-    std::cout << x1 << " " << y1 << std::endl;
     for (float t=0.; t<1.; t+=.01) {
         int x = x0 + (x1-x0)*t;
         int y = y0 + (y1-y0)*t;
@@ -31,26 +29,41 @@ arma::mat44 projection_matrix(float left, float right, float top, float bottom, 
     };
 }
 Renderer::Renderer() :
-    m_projection_matrix(projection_matrix(-2, 2, 2, -2, -5, 3)),
-    m_vertex_shader(std::make_unique<VertexShader>(m_projection_matrix))
+    m_projection_matrix(projection_matrix(-15, 15, 15, -15, -5, 3)),
+    m_transformation_matrix(arma::mat44(arma::fill::eye)),
+    m_vertex_shader(std::make_unique<VertexShader>(m_projection_matrix, m_transformation_matrix))
 {
 
 }
-
+arma::mat44 rotate(float angle, float v1, float v2, float v3)
+{
+    (void) v1;
+    (void) v2;
+    (void) v3;
+    return arma::mat44{
+        {1, 0, 0, 0},
+        {0, cos(angle), -sin(angle), 0},
+        {0, sin(angle), cos(angle), 0},
+        {0, 0, 0, 1}};
+}
 void Renderer::render(arma::Cube<sf::Uint8> & img, Scene &scene)
 {
+
+    this->m_vertex_shader->clean();
+    angle += 0.0001;
+    m_transformation_matrix = rotate(angle, 1, 0 ,0);
     for (auto & elem : scene.meshes()) {
         for (auto & vertex : elem->vertices()) {
             this->m_vertex_shader->apply(vertex);
         }
     }
-    arma::vec4 size{800, 600, 1, 1};
+
     for (auto & elem : scene.meshes()) {
         auto &vertices = this->m_vertex_shader->projectedVertices();
         for (auto & f : elem->faces()) {
-            line(vertices[f[0]] % size, vertices[f[1]] % size, img);
-            line(vertices[f[1]] % size, vertices[f[2]] % size, img);
-            line(vertices[f[2]] % size, vertices[f[0]] % size, img);
+            line(vertices[f[0]], vertices[f[1]], img);
+            line(vertices[f[1]], vertices[f[2]], img);
+            line(vertices[f[2]], vertices[f[0]], img);
         }
     }
 

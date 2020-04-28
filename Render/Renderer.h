@@ -12,6 +12,8 @@ public:
     void render(arma::Cube<sf::Uint8> & texure, Scene & scene);
 private:
     arma::mat44 m_projection_matrix;
+    arma::mat44 m_transformation_matrix;
     std::unique_ptr<VertexShader> m_vertex_shader;
+    float angle = 0;
 };
 #endif

@@ -29,11 +29,11 @@ face ObjLoader::readFace(std::istringstream &iss)
 {
     std::string f1, f2, f3;
     iss >> f1 >> f2 >> f3;
-    std::vector<uint64_t> faces_data;
-    split(f1, faces_data, '/');
-    split(f2, faces_data, '/');
-    split(f3, faces_data, '/');
-    return face{faces_data[0], faces_data[0], faces_data[0]};
+    std::vector<uint64_t> faces_data1, faces_data2, faces_data3;
+    split(f1, faces_data1, '/');
+    split(f2, faces_data2, '/');
+    split(f3, faces_data3, '/');
+    return face{faces_data1[0], faces_data2[0], faces_data3[0]};
 }
 
 
